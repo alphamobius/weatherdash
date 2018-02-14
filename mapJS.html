@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Simple Map</title>
+    <meta name="viewport" content="initial-scale=1.0">
+    <meta charset="utf-8">
+    <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 100%;
+      }
+      /* Optional: Makes the sample page fill the window. */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+	#floating-panel {
+        position: absolute;
+        top: 10px;
+        left: 25%;
+        z-index: 5;
+        background-color: #fff;
+        padding: 5px;
+        border: 1px solid #999;
+        text-align: center;
+        font-family: 'Roboto','sans-serif';
+        line-height: 30px;
+        padding-left: 10px;
+      }
+    </style>
+    <script src="https://maps.googleapis.com/maps/api/js?key=<INSERT KEY HERE>"</script>
+	<script>
+	//declare variables
+
+      var overlay;
+
+      WunderOverlay.prototype = new google.maps.OverlayView();
+      
+	//build the map, called by the google maps API call at the bottom
+      function initMap() {
+          var map = new google.maps.Map(document.getElementById('map'), {
+          center: {lat: 21.255589, lng: -157.806241},
+          zoom: 14
+	  mapTypeId: 'satellite'
+        });
+      }
+      var bounds  = new google.maps.LatLngBounds(
+	  new google.maps.LatLng(20.950000, -157.500000),
+          new google.maps.LatLng(21.550000, -158.100000));
+	
+      var srcImage = 'http://api.wunderground.com/api/<wunderkey>/animatedradar/image.gif?centerlat=21.255589&centerlon=-158.806241&radius=100&width=800&height=800&num=8&timelabel=1&basemap=0&smooth=1'
+      overlay = new WunderOverlay(bounds, srcImage, map);
+
+ 	/** @constructor */
+	function WunderOverlay(bounds, image, map) {
+
+	  // Initialize all properties.
+	  this.bounds_ = bounds;
+	  this.image_ = image;
+	  this.map_ = map;
+	
+	  // Define a property to hold the image's div. We'll
+	  // actually create this div upon receipt of the onAdd()
+	  // method so we'll leave it null for now.
+	  this.div_ = null;
+	
+	  // Explicitly call setMap on this overlay.
+	  this.setMap(map);
+	}
+
+	/**
+	 * onAdd is called when the map's panes are ready and the overlay has been
+	 * added to the map.
+	 */
+	WunderOverlay.prototype.onAdd = function() {
+	
+	  var div = document.createElement('div');
+	  div.style.borderStyle = 'none';
+	  div.style.borderWidth = '0px';
+	  div.style.position = 'absolute';
+	
+	  // Create the img element and attach it to the div.
+	  var img = document.createElement('img');
+	  img.src = this.image_;
+	  img.style.width = '100%';
+	  img.style.height = '100%';
+	  img.style.position = 'absolute';
+	  div.appendChild(img);
+	
+	  this.div_ = div;
+	
+	  // Add the element to the "overlayLayer" pane.
+	  var panes = this.getPanes();
+	  panes.overlayLayer.appendChild(div);
+	};
+
+	WunderOverlay.prototype.draw = function() {
+	
+	  // We use the south-west and north-east
+	  // coordinates of the overlay to peg it to the correct position and size.
+	  // To do this, we need to retrieve the projection from the overlay.
+	  var overlayProjection = this.getProjection();
+	
+	  // Retrieve the south-west and north-east coordinates of this overlay
+	  // in LatLngs and convert them to pixel coordinates.
+	  // We'll use these coordinates to resize the div.
+	  var sw = overlayProjection.fromLatLngToDivPixel(this.bounds_.getSouthWest());
+	  var ne = overlayProjection.fromLatLngToDivPixel(this.bounds_.getNorthEast());
+	
+	  // Resize the image's div to fit the indicated dimensions.
+	  var div = this.div_;
+	  div.style.left = sw.x + 'px';
+	  div.style.top = ne.y + 'px';
+	  div.style.width = (ne.x - sw.x) + 'px';
+	  div.style.height = (sw.y - ne.y) + 'px';
+	};
+
+	WunderOverlay.prototype.onRemove = function() {
+        	this.div_.parentNode.removeChild(this.div_);
+      	};
+
+      	// Set the visibility to 'hidden' or 'visible'.
+      	WunderOverlay.prototype.hide = function() {
+      		if (this.div_) {
+          	// The visibility property must be a string enclosed in quotes.
+          	this.div_.style.visibility = 'hidden';
+        	}
+      	};
+
+      	WunderOverlay.prototype.show = function() {
+      	  if (this.div_) {
+          	this.div_.style.visibility = 'visible';
+       	  }
+      	};
+
+      	WunderOverlay.prototype.toggle = function() {
+        	if (this.div_) {
+        	  if (this.div_.style.visibility === 'hidden') {
+            		this.show();
+          	  } else {
+            		this.hide();
+          	  }
+        	}
+      	};
+
+	// Detach the map from the DOM via toggleDOM().
+      	// Note that if we later reattach the map, it will be visible again,
+      	// because the containing <div> is recreated in the overlay's onAdd() method.
+      	WunderOverlay.prototype.toggleDOM = function() {
+        	if (this.getMap()) {
+        	  // Note: setMap(null) calls OverlayView.onRemove()
+        	  this.setMap(null);
+        	} else {
+        	  this.setMap(this.map_);
+        	}
+      	};
+
+      	//google.maps.event.addDomListener(window, 'load', initMap);
+    </script>
+   </head>
+
+   <body>
+<!-- Add an input button to initiate the toggle method on the overlay. -->
+    <div id="floating-panel">
+      <input type="button" value="Toggle visibility" onclick="overlay.toggle();"></input>
+      <input type="button" value="Toggle DOM attachment" onclick="overlay.toggleDOM();"></input>
+    </div>
+    <div id="map"></div>
+  </body>
+
+</html>
