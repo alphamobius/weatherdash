@@ -1,0 +1,4 @@
+animated radar:
+http://api.wunderground.com/api/2183944c3b11b41a/animatedradar/image.gif?centerlat=21.3320&centerlon=-158.0053&radius=100&width=800&height=800&num=8&timelabel=1&basemap=1&smooth=1
+animated satellite:
+http://api.wunderground.com/api/2183944c3b11b41a/animatedsatellite/image.gif?centerlat=21.3320&centerlon=-158.0053&radius=200&width=800&height=800&key=sat_ir4&num=8&timelabel=1&basemap=1&smooth=1
